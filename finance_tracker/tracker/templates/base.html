@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finance Tracker</title>
+    <style>
+        .amount-cell {
+            padding: 12px;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+        }
+        .text-red {
+            color: red;
+        }
+    </style>
+
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <div class="navi">
+            <div class="welcome">
+                Welcome, {{ user.username }} !! 
+            </div>
+            <div>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="logout-button btn">Logout</button>
+            </form>
+        </div>
+            <style>
+            .logout-button {
+                background-color: rgb(97 89 89);
+                color: rgb(255, 255, 255);
+                cursor: pointer;
+                font: inherit;
+                padding: 10px;
+                border-radius: 15%;
+                
+            }
+            .welcome{
+                    font-size: xx-large;
+            }
+            .navi{
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            </style>
+        </div>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
+

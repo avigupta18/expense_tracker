@@ -1,0 +1,4 @@
+__pycache__
+finance_tracker/db.sqlite3
+finance_env
+

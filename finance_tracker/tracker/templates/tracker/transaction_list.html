@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Home Button -->
+<div style="margin-bottom: 20px;">
+  <a href="{% url 'dashboard' %}">
+    <button style="padding: 10px 20px; background-color: #444; color: white; border: none; border-radius: 5px;">
+      Home
+    </button>
+  </a>
+</div>
+
+<h2 style="margin-bottom: 10px;">Your Transactions</h2>
+
+<!-- Action Links -->
+<div style="margin-bottom: 20px;">
+  <a href="{% url 'add_transaction' %}" style="text-decoration: none; margin-right: 20px; font-weight: bold;"> + Add Transaction</a>
+  <a href="{% url 'export_csv' %}" style="text-decoration: none; font-weight: bold;">Export to CSV -></a>
+</div>
+
+{% if transactions %}
+  <table style="width: 100%; border-collapse: collapse; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #f9f9f9;">
+      <tr>
+        <th style="padding: 12px; text-align: left;">Date</th>
+        <th style="padding: 12px; text-align: left;">Category</th>
+        <th style="padding: 12px; text-align: left;">Amount</th>
+        <th style="padding: 12px; text-align: left;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for txn in transactions %}
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 12px;">{{ txn.date }}</td>
+          <td style="padding: 12px;">{{ txn.category.name }}</td>
+          <td class="amount-cell {% if txn.category.is_income %}text-green{% else %}text-red{% endif %};">
+            ₹{{ txn.amount }}
+          </td>
+          <td style="padding: 12px;">
+            <a href="{% url 'edit_transaction' txn.pk %}" style="margin-right: 10px; color: #2980b9;">Edit</a>
+            <a href="{% url 'delete_transaction' txn.pk %}" style="color: red;">Delete</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No transactions yet.</p>
+{% endif %}
+
+<!-- Pagination -->
+{% if is_paginated %}
+  <div style="margin-top: 20px; text-align: center;">
+    {% if page_obj.has_previous %}
+      <a href="?page=1">« First</a>
+      <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
+    {% endif %}
+
+    <span style="margin: 0 10px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">Next</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}">Last »</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% endblock %}

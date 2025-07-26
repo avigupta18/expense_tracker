@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .card {
+    display: inline-block;
+    width: 30%;
+    margin: 0 1% 20px 0;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .card h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #555;
+  }
+
+  .card p {
+    font-size: 24px;
+    margin: 10px 0 0;
+    font-weight: bold;
+  }
+
+  .card.income p { color: #4caf50; }
+  .card.expense p { color: #f44336; }
+  .card.balance p { color: #3f51b5; }
+
+  .buttons a {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    margin-right: 10px;
+    font-weight: bold;
+  }
+
+  .btn-green { background-color: #4CAF50; }
+  .btn-blue { background-color: #2196F3; }
+  .btn-purple { background-color: #9c27b0; }
+  .btn-orange { background-color: #f57c00; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  table th, table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+  }
+
+  .alert {
+    padding: 10px;
+    background-color: #ffcdd2;
+    color: #b71c1c;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+</style>
+
+<h2>Dashboard</h2>
+
+
+<div class="buttons" style="margin-bottom: 20px;">
+  <a href="{% url 'add_transaction' %}" class="btn-green"> Add Transaction</a>
+
+  {% if monthly_budget %}
+    <a href="{% url 'edit_budget' monthly_budget.pk %}" class="btn-purple"> Edit Budget</a>
+  {% else %}
+    <a href="{% url 'add_budget' %}" class="btn-blue"> Set Budget</a>
+  {% endif %}
+
+  <a href="{% url 'export_csv' %}" class="btn-orange"> Download CSV</a>
+</div>
+
+
+
+<div style="display: flex; justify-content: space-between;">
+  <div class="card income">
+    <h3>Total Income</h3>
+    <p>₹{{ total_income }}</p>
+  </div>
+  <div class="card expense">
+    <h3>Total Expense</h3>
+    <p>₹{{ total_expense }}</p>
+  </div>
+  <div class="card balance">
+    <h3>Balance</h3>
+    <p>₹{{ balance }}</p>
+  </div>
+</div>
+
+<form method="get" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+  <label>Select Month:</label>
+  
+  <select name="month" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+    {% for m in months %}
+      <option value="{{ m }}" {% if selected_month|date:"m" == m %}selected{% endif %}>{{ m }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="year" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+    {% for y in years %}
+      <option value="{{ y }}" {% if selected_month|date:"Y" == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit" style="padding: 8px 16px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">
+    View
+  </button>
+</form>
+
+<h3>Budget for {{ selected_month|date:"F Y" }}</h3>
+
+{% if monthly_budget %}
+  <p class="card income"><strong>Budget:</strong> ₹{{ monthly_budget.amount }}</p>
+  <p class="card expense"><strong>Remaining:</strong> ₹{{ budget_remaining }}</p>
+
+  {% if over_budget %}
+    <p style="color: red;"> You are over budget!</p>
+  {% endif %}
+{% else %}
+  <p>No budget set for this month.
+     <a href="{% url 'add_budget' %}">+ Set Budget</a>
+  </p>
+{% endif %}
+
+<hr>
+<h3 style="margin-top: 30px;">Recent Transactions</h3>
+<!--  Home Button -->
+  <div style="margin-bottom: 15px;">
+    <a href="{% url 'transactions' %}">
+      <button style="padding: 8px 16px; background-color: #555; color: white; border: none; border-radius: 5px;">
+            View all
+      </button>
+    </a>
+  </div>
+
+{% if recent_transactions %}
+  <style>
+    .txn-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .txn-table th,
+    .txn-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .txn-table th {
+      background-color: #f8f8f8;
+      font-weight: bold;
+    }
+
+    .income {
+      color: green;
+      font-weight: bold;
+    }
+
+    .expense {
+      color: red;
+      font-weight: bold;
+    }
+
+    .no-desc {
+      color: #888;
+      font-style: italic;
+    }
+  </style>
+
+  <table class="txn-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for txn in recent_transactions %}
+        <tr>
+          <td>{{ txn.date|date:"d M Y" }}</td>
+          <td>{{ txn.category.name }}</td>
+          <td class="{% if txn.category.is_income %}income{% else %}expense{% endif %}">
+            ₹{{ txn.amount }}
+          </td>
+          <td>
+            {% if txn.description %}
+              {{ txn.description }}
+            {% else %}
+              <span class="no-desc">No description</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No recent transactions.</p>
+{% endif %}
+
+{% endblock %}
+
+
